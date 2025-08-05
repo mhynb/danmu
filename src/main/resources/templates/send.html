@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'发送弹幕 - ' + ${roomId}">发送弹幕</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .room-info {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .color-preview {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .preview-area {
+            background: #000;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-danmu {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            position: absolute;
+            white-space: nowrap;
+        }
+
+        .preview-scroll {
+            animation: preview-scroll 5s linear infinite;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .preview-top {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .preview-bottom {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @keyframes preview-scroll {
+            from {
+                transform: translateX(100%) translateY(-50%);
+            }
+            to {
+                transform: translateX(-100%) translateY(-50%);
+            }
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .status-message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .quick-messages {
+            margin-bottom: 20px;
+        }
+
+        .quick-messages h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .quick-btn {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .connection-status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 弹幕发送器</h1>
+            <div class="room-info" th:text="'房间: ' + ${roomId}">房间信息</div>
+        </div>
+
+        <div class="connection-status" id="connectionStatus">连接中...</div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="sentCount">0</div>
+                <div class="stat-label">已发送</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="successCount">0</div>
+                <div class="stat-label">成功</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="errorCount">0</div>
+                <div class="stat-label">失败</div>
+            </div>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="form-group">
+            <label for="nicknameInput">昵称</label>
+            <input type="text" id="nicknameInput" class="form-control" placeholder="输入你的昵称" value="游客">
+        </div>
+
+        <div class="form-group">
+            <label for="contentInput">弹幕内容</label>
+            <textarea id="contentInput" class="form-control" rows="3" placeholder="输入弹幕内容..." maxlength="100"></textarea>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="colorInput">弹幕颜色</label>
+                <input type="color" id="colorInput" class="form-control" value="#FFFFFF">
+            </div>
+            <div class="form-group">
+                <label for="typeSelect">弹幕类型</label>
+                <select id="typeSelect" class="form-control">
+                    <option value="0">滚动弹幕</option>
+                    <option value="1">顶部弹幕</option>
+                    <option value="2">底部弹幕</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="speedInput">弹幕速度</label>
+                <select id="speedInput" class="form-control">
+                    <option value="3">慢速</option>
+                    <option value="5" selected>正常</option>
+                    <option value="8">快速</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>弹幕预览</label>
+            <div class="preview-area" id="previewArea">
+                <div class="preview-danmu preview-scroll" id="previewDanmu" style="color: #FFFFFF;">游客: 这是预览弹幕</div>
+            </div>
+        </div>
+
+        <div class="quick-messages">
+            <h3>快速消息</h3>
+            <button class="quick-btn" onclick="setQuickMessage('666')">666</button>
+            <button class="quick-btn" onclick="setQuickMessage('哈哈哈')">哈哈哈</button>
+            <button class="quick-btn" onclick="setQuickMessage('太棒了！')">太棒了！</button>
+            <button class="quick-btn" onclick="setQuickMessage('加油！')">加油！</button>
+            <button class="quick-btn" onclick="setQuickMessage('精彩！')">精彩！</button>
+            <button class="quick-btn" onclick="setQuickMessage('支持！')">支持！</button>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="btn" onclick="sendDanmu()">发送弹幕</button>
+            <button class="btn btn-secondary" onclick="previewDanmu()">预览效果</button>
+            <button class="btn btn-secondary" onclick="clearForm()">清空内容</button>
+            <button class="btn btn-secondary" onclick="window.open('/room/' + roomId, '_blank')">观看房间</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script th:inline="javascript">
+        const roomId = /*[[${roomId}]]*/ 'default';
+        let stompClient = null;
+        let sentCount = 0;
+        let successCount = 0;
+        let errorCount = 0;
+
+        // 连接WebSocket
+        function connect() {
+            const socket = new SockJS('/ws-danmu');
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function(frame) {
+                console.log('Connected: ' + frame);
+                updateConnectionStatus(true);
+            }, function(error) {
+                console.log('Connection error: ' + error);
+                updateConnectionStatus(false);
+                setTimeout(connect, 5000);
+            });
+        }
+
+        // 发送弹幕
+        function sendDanmu() {
+            const content = document.getElementById('contentInput').value.trim();
+            const nickname = document.getElementById('nicknameInput').value.trim() || '游客';
+            const color = document.getElementById('colorInput').value;
+            const type = parseInt(document.getElementById('typeSelect').value);
+            const speed = parseInt(document.getElementById('speedInput').value);
+
+            if (!content) {
+                showMessage('请输入弹幕内容', 'error');
+                return;
+            }
+
+            const message = {
+                content: content,
+                nickname: nickname,
+                color: color,
+                danmuType: type,
+                speed: speed,
+                roomId: roomId
+            };
+
+            sentCount++;
+            updateStats();
+
+            // 使用HTTP接口发送
+            fetch('/api/danmu/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(message)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    successCount++;
+                    showMessage('弹幕发送成功！', 'success');
+                    document.getElementById('contentInput').value = '';
+                } else {
+                    errorCount++;
+                    showMessage('发送失败: ' + data.message, 'error');
+                }
+                updateStats();
+            })
+            .catch(error => {
+                errorCount++;
+                showMessage('发送失败: ' + error.message, 'error');
+                updateStats();
+            });
+        }
+
+        // 预览弹幕效果
+        function previewDanmu() {
+            const content = document.getElementById('contentInput').value.trim() || '这是预览弹幕';
+            const nickname = document.getElementById('nicknameInput').value.trim() || '游客';
+            const color = document.getElementById('colorInput').value;
+            const type = parseInt(document.getElementById('typeSelect').value);
+
+            const previewElement = document.getElementById('previewDanmu');
+            previewElement.textContent = `${nickname}: ${content}`;
+            previewElement.style.color = color;
+
+            // 移除所有类名
+            previewElement.className = 'preview-danmu';
+
+            // 根据类型添加对应类名
+            if (type === 1) {
+                previewElement.classList.add('preview-top');
+            } else if (type === 2) {
+                previewElement.classList.add('preview-bottom');
+            } else {
+                previewElement.classList.add('preview-scroll');
+            }
+
+            // 重新触发动画
+            previewElement.style.animation = 'none';
+            setTimeout(() => {
+                if (type === 0) {
+                    previewElement.style.animation = 'preview-scroll 5s linear infinite';
+                }
+            }, 10);
+        }
+
+        // 设置快速消息
+        function setQuickMessage(message) {
+            document.getElementById('contentInput').value = message;
+            previewDanmu();
+        }
+
+        // 清空表单
+        function clearForm() {
+            document.getElementById('contentInput').value = '';
+            document.getElementById('nicknameInput').value = '游客';
+            document.getElementById('colorInput').value = '#FFFFFF';
+            document.getElementById('typeSelect').value = '0';
+            document.getElementById('speedInput').value = '5';
+            previewDanmu();
+        }
+
+        // 显示状态消息
+        function showMessage(message, type) {
+            const messageElement = document.getElementById('statusMessage');
+            messageElement.textContent = message;
+            messageElement.className = 'status-message status-' + type;
+            messageElement.style.display = 'block';
+
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // 更新连接状态
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            if (connected) {
+                status.textContent = '✅ WebSocket已连接';
+                status.className = 'connection-status connected';
+            } else {
+                status.textContent = '❌ WebSocket连接断开';
+                status.className = 'connection-status disconnected';
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('sentCount').textContent = sentCount;
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('errorCount').textContent = errorCount;
+        }
+
+        // 监听输入变化，实时预览
+        document.getElementById('contentInput').addEventListener('input', previewDanmu);
+        document.getElementById('nicknameInput').addEventListener('input', previewDanmu);
+        document.getElementById('colorInput').addEventListener('input', previewDanmu);
+        document.getElementById('typeSelect').addEventListener('change', previewDanmu);
+
+        // 回车发送
+        document.getElementById('contentInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendDanmu();
+            }
+        });
+
+        // 页面加载完成后连接
+        window.onload = function() {
+            connect();
+            previewDanmu();
+        };
+
+        // 页面关闭时断开连接
+        window.onbeforeunload = function() {
+            if (stompClient) {
+                stompClient.disconnect();
+            }
+        };
+    </script>
+</body>
+</html>
+

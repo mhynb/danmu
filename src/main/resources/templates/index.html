@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时弹幕系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .room-section {
+            margin-bottom: 30px;
+        }
+
+        .room-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .room-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .quick-rooms {
+            margin-top: 20px;
+        }
+
+        .quick-rooms h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .room-btn {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .room-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .features {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .features h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .features ul {
+            list-style: none;
+            color: #666;
+        }
+
+        .features li {
+            padding: 5px 0;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 实时弹幕系统</h1>
+        <p class="description">
+            基于Spring Boot + WebSocket的实时弹幕系统<br>
+            支持多房间、实时通信、弹幕样式自定义
+        </p>
+
+        <div class="room-section">
+            <input type="text" id="roomInput" class="room-input" placeholder="输入房间ID或名称">
+            <br>
+            <button class="btn" onclick="enterRoom()">进入房间</button>
+            <button class="btn" onclick="sendPage()">发送弹幕</button>
+        </div>
+
+        <div class="quick-rooms">
+            <h3>快速进入</h3>
+            <button class="room-btn" onclick="quickEnter('live-1')">直播间1</button>
+            <button class="room-btn" onclick="quickEnter('live-2')">直播间2</button>
+            <button class="room-btn" onclick="quickEnter('game-room')">游戏房间</button>
+            <button class="room-btn" onclick="quickEnter('chat-room')">聊天室</button>
+        </div>
+
+        <div class="features">
+            <h3>系统特性</h3>
+            <ul>
+                <li>实时WebSocket通信</li>
+                <li>多房间支持</li>
+                <li>弹幕样式自定义</li>
+                <li>历史弹幕查询</li>
+                <li>IP地址记录</li>
+                <li>响应式设计</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function enterRoom() {
+            const roomId = document.getElementById('roomInput').value.trim();
+            if (!roomId) {
+                alert('请输入房间ID');
+                return;
+            }
+            window.open(`/room/${roomId}`, '_blank');
+        }
+
+        function sendPage() {
+            const roomId = document.getElementById('roomInput').value.trim();
+            if (!roomId) {
+                alert('请输入房间ID');
+                return;
+            }
+            window.open(`/send/${roomId}`, '_blank');
+        }
+
+        function quickEnter(roomId) {
+            window.open(`/room/${roomId}`, '_blank');
+        }
+
+        // 回车键快速进入
+        document.getElementById('roomInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                enterRoom();
+            }
+        });
+    </script>
+</body>
+</html>
+
